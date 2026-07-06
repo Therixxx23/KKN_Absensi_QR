@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useNavigate } from 'react-router-dom';
 import { getAllSessions, createSession, deleteSession } from '../services/api';
+import { downloadQRasPDF } from '../utils/qrPdf';
 import Button from '../components/Button';
 import Toast from '../components/Toast';
 import EmptyState from '../components/EmptyState';
@@ -146,16 +147,25 @@ function AdminSessions() {
               <QRCodeSVG value={`${window.location.origin}/scan?token=${newSession.qr_token}`} size={260} />
             </div>
             <p style={styles.qrNote}>Print/tempel QR ini di lokasi KKN.</p>
-            <Button
-              variant="success"
-              onClick={() => {
-                navigator.clipboard.writeText(newSession.qr_token);
-                setToast({ message: 'Token QR disalin ke clipboard', type: 'success' });
-              }}
-              style={{ marginTop: '8px' }}
-            >
-              Salin Token QR
-            </Button>
+            <div style={styles.btnGroup}>
+              <Button
+                variant="success"
+                onClick={() => {
+                  navigator.clipboard.writeText(newSession.qr_token);
+                  setToast({ message: 'Token QR disalin ke clipboard', type: 'success' });
+                }}
+                style={{ flex: 1 }}
+              >
+                Salin Token QR
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => downloadQRasPDF(newSession.qr_token, newSession.tanggal_mulai, newSession.tanggal_selesai)}
+                style={{ flex: 1 }}
+              >
+                Download QR (PDF)
+              </Button>
+            </div>
           </div>
         )}
 
@@ -339,6 +349,11 @@ const styles = {
     fontSize: '13px',
     color: 'var(--text)',
     marginBottom: '4px',
+  },
+  btnGroup: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: '8px',
   },
   tableWrapper: {
     overflowX: 'auto',

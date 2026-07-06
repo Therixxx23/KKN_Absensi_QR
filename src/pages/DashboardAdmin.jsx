@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { getActiveSession, getAttendances } from '../services/api';
+import { downloadQRasPDF } from '../utils/qrPdf';
 import Button from '../components/Button';
 import StatusBadge from '../components/StatusBadge';
 import Toast from '../components/Toast';
@@ -121,16 +122,25 @@ function DashboardAdmin() {
               <QRCodeSVG value={`${window.location.origin}/scan?token=${session.qr_token}`} size={280} />
             </div>
             <p style={styles.qrNote}>QR ini berlaku untuk seluruh periode KKN. Print/tempel di lokasi.</p>
-            <Button
-              variant="success"
-              onClick={() => {
-                navigator.clipboard.writeText(session.qr_token);
-                setToast({ message: 'Token QR disalin ke clipboard', type: 'success' });
-              }}
-              style={{ marginTop: '12px' }}
-            >
-              Salin Token QR
-            </Button>
+            <div style={styles.btnGroup}>
+              <Button
+                variant="success"
+                onClick={() => {
+                  navigator.clipboard.writeText(session.qr_token);
+                  setToast({ message: 'Token QR disalin ke clipboard', type: 'success' });
+                }}
+                style={{ flex: 1 }}
+              >
+                Salin Token QR
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => downloadQRasPDF(session.qr_token, session.tanggal_mulai, session.tanggal_selesai)}
+                style={{ flex: 1 }}
+              >
+                Download QR (PDF)
+              </Button>
+            </div>
           </div>
         ) : (
           <div style={styles.card}>
@@ -308,6 +318,11 @@ const styles = {
     fontSize: '13px',
     color: 'var(--text)',
     marginBottom: '4px',
+  },
+  btnGroup: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: '12px',
   },
   rekapHeader: {
     display: 'flex',
