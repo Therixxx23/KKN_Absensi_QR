@@ -24,15 +24,11 @@ async function main() {
     { id: crypto.randomUUID(), nim: '220101004', nama: 'Dewi Lestari', role: 'mahasiswa', email: '', password_hash: await hash('12345678') },
   ];
 
-  const now = new Date();
-  const akhir = new Date(now);
-  akhir.setDate(akhir.getDate() + 40);
-
   const session = {
     id: crypto.randomUUID(),
     qr_token: crypto.randomUUID(),
-    tanggal_mulai: now.toISOString().split('T')[0],
-    tanggal_selesai: akhir.toISOString().split('T')[0],
+    tanggal_mulai: '2026-07-16',
+    tanggal_selesai: '2026-08-23',
     status: 'aktif',
   };
 

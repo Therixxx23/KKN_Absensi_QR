@@ -29,11 +29,11 @@ router.post('/', (req, res) => {
   tanggalSelesai.setHours(23, 59, 59, 999);
 
   if (now < tanggalMulai) {
-    return res.status(400).json({ success: false, message: 'Periode KKN belum dimulai' });
+    return res.status(400).json({ success: false, message: 'Periode absensi KKN belum dimulai' });
   }
 
   if (now > tanggalSelesai) {
-    return res.status(400).json({ success: false, message: 'Periode KKN sudah berakhir' });
+    return res.status(400).json({ success: false, message: 'Periode absensi KKN sudah berakhir' });
   }
 
   const sesiWaktu = bodySesiWaktu || getSesiWaktu(now);
