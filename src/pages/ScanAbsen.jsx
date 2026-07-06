@@ -75,7 +75,7 @@ function ScanAbsen() {
       <main style={styles.main}>
         {status === 'scanning' && (
           <>
-            <p style={styles.instruction}>Arahkan kamera ke QR Code</p>
+            <p style={styles.instruction}>Arahkan kamera ke QR Code KKN</p>
             <div id="qr-reader" style={styles.reader} />
             <p style={styles.hint}>Mengarahkan ke QR...</p>
           </>
@@ -92,7 +92,7 @@ function ScanAbsen() {
           <div style={{ ...styles.statusBox, background: '#DCFCE7', border: '2px solid var(--green)' }}>
             <div style={styles.icon}>✅</div>
             <h2 style={{ ...styles.statusTitle, color: '#166534' }}>
-              Absen berhasil!
+              Absen {result.sesi_waktu} berhasil!
             </h2>
             <p style={styles.successText}>
               Halo, {result.nama}!<br />
@@ -102,9 +102,6 @@ function ScanAbsen() {
                 minute: '2-digit',
               })}
             </p>
-            {result.kegiatan && (
-              <p style={styles.successSub}>Kegiatan: {result.kegiatan}</p>
-            )}
             <button onClick={handleScanLagi} style={styles.scanAgainBtn}>
               Scan Lagi
             </button>
@@ -217,11 +214,6 @@ const styles = {
     color: '#166534',
     fontWeight: '500',
     lineHeight: '1.6',
-  },
-  successSub: {
-    fontSize: '14px',
-    color: '#166534',
-    opacity: 0.8,
   },
   scanAgainBtn: {
     marginTop: '8px',

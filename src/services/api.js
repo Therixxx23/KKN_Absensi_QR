@@ -27,20 +27,12 @@ export function getActiveSession() {
   return api.get('/sessions/active');
 }
 
-export function getTodaySession() {
-  return api.get('/sessions/today');
+export function generateSession() {
+  return api.post('/sessions/generate');
 }
 
-export function createSession(data) {
-  return api.post('/sessions', data);
-}
-
-export function generateSession(data) {
-  return api.post('/sessions/generate', data);
-}
-
-export function submitAttendance(token, userId) {
-  return api.post('/attendances', { token, user_id: userId });
+export function submitAttendance(qrToken, userId) {
+  return api.post('/attendances', { qrToken, userId });
 }
 
 export function getAttendances(params) {

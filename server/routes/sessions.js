@@ -4,68 +4,46 @@ import { readDB, writeDB } from '../db.js';
 
 const router = Router();
 
-router.post('/', (req, res) => {
-  const { nama_kegiatan, valid_from, valid_until } = req.body;
+router.post('/generate', (req, res) => {
+  const sessions = readDB('sessions');
 
-  if (!nama_kegiatan || !valid_from || !valid_until) {
-    return res.status(400).json({ success: false, message: 'nama_kegiatan, valid_from, dan valid_until harus diisi' });
+  const existing = sessions.find((s) => s.status === 'aktif');
+  if (existing) {
+    return res.json({ success: true, message: 'QR KKN sudah tersedia', data: existing });
   }
 
-  const sessions = readDB('sessions');
+  const now = new Date();
+  const tanggalMulai = now.toISOString().split('T')[0];
+  const akhir = new Date(now);
+  akhir.setDate(akhir.getDate() + 40);
+  const tanggalSelesai = akhir.toISOString().split('T')[0];
+
   const session = {
     id: crypto.randomUUID(),
-    tanggal: new Date().toISOString().split('T')[0],
-    nama_kegiatan,
     qr_token: crypto.randomUUID(),
-    valid_from,
-    valid_until,
-    aktif: true,
+    tanggal_mulai: tanggalMulai,
+    tanggal_selesai: tanggalSelesai,
+    status: 'aktif',
   };
 
   sessions.push(session);
   writeDB('sessions', sessions);
 
-  res.status(201).json({ success: true, message: 'Sesi absen berhasil dibuat', data: session });
+  res.status(201).json({ success: true, message: 'QR KKN berhasil dibuat untuk 40 hari', data: session });
 });
 
 router.get('/active', (req, res) => {
   const sessions = readDB('sessions');
-  const now = new Date().toISOString();
-  const active = sessions.filter(
-    (s) => s.aktif && s.valid_from <= now && s.valid_until >= now
-  );
-  res.json({ success: true, data: active });
-});
+  const now = new Date();
+  const active = sessions.find((s) => {
+    if (s.status !== 'aktif') return false;
+    const mulai = new Date(s.tanggal_mulai);
+    const selesai = new Date(s.tanggal_selesai);
+    selesai.setHours(23, 59, 59, 999);
+    return now >= mulai && now <= selesai;
+  });
 
-router.get('/today', (req, res) => {
-  const today = new Date().toISOString().split('T')[0];
-  const sessions = readDB('sessions');
-  const todaySessions = sessions.filter((s) => s.tanggal === today);
-  res.json({ success: true, data: todaySessions });
-});
-
-router.post('/generate', (req, res) => {
-  const { nama_kegiatan, valid_from, valid_until } = req.body;
-
-  if (!nama_kegiatan || !valid_from || !valid_until) {
-    return res.status(400).json({ success: false, message: 'nama_kegiatan, valid_from, dan valid_until harus diisi' });
-  }
-
-  const sessions = readDB('sessions');
-  const session = {
-    id: crypto.randomUUID(),
-    tanggal: new Date().toISOString().split('T')[0],
-    nama_kegiatan,
-    qr_token: crypto.randomUUID(),
-    valid_from,
-    valid_until,
-    aktif: true,
-  };
-
-  sessions.push(session);
-  writeDB('sessions', sessions);
-
-  res.status(201).json({ success: true, message: 'QR sesi berhasil dibuat', data: session });
+  res.json({ success: true, data: active || null });
 });
 
 export default router;

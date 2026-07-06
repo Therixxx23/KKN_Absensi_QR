@@ -24,13 +24,27 @@ async function main() {
     { id: crypto.randomUUID(), nim: '220101004', nama: 'Dewi Lestari', role: 'mahasiswa', email: '', password_hash: await hash('12345678') },
   ];
 
+  const now = new Date();
+  const akhir = new Date(now);
+  akhir.setDate(akhir.getDate() + 40);
+
+  const session = {
+    id: crypto.randomUUID(),
+    qr_token: crypto.randomUUID(),
+    tanggal_mulai: now.toISOString().split('T')[0],
+    tanggal_selesai: akhir.toISOString().split('T')[0],
+    status: 'aktif',
+  };
+
   writeFileSync(join(dataDir, 'users.json'), JSON.stringify(users, null, 2));
-  writeFileSync(join(dataDir, 'sessions.json'), '[]');
+  writeFileSync(join(dataDir, 'sessions.json'), JSON.stringify([session], null, 2));
   writeFileSync(join(dataDir, 'attendances.json'), '[]');
 
   console.log('Seed data berhasil dibuat');
-  console.log(`Admin  → NIM: admin / Password: admin123`);
-  console.log(`User 1 → NIM: 220101001 / Password: 12345678`);
+  console.log(`Admin    → NIM: admin / Password: admin123`);
+  console.log(`User 1   → NIM: 220101001 / Password: 12345678`);
+  console.log(`QR Token → ${session.qr_token}`);
+  console.log(`Periode  → ${session.tanggal_mulai} s.d ${session.tanggal_selesai}`);
 }
 
 main();

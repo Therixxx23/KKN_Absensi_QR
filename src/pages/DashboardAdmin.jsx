@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { createSession, getActiveSession, getAttendances } from '../services/api';
+import { getActiveSession, getAttendances, generateSession } from '../services/api';
 import Button from '../components/Button';
 import StatusBadge from '../components/StatusBadge';
 import Toast from '../components/Toast';
@@ -15,9 +15,6 @@ function DashboardAdmin() {
   const [loadingRekap, setLoadingRekap] = useState(false);
   const [creating, setCreating] = useState(false);
   const [toast, setToast] = useState(null);
-  const [namaKegiatan, setNamaKegiatan] = useState('');
-  const [jamMulai, setJamMulai] = useState('');
-  const [jamSelesai, setJamSelesai] = useState('');
   const [filterTanggal, setFilterTanggal] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
@@ -29,9 +26,9 @@ function DashboardAdmin() {
     setLoadingSesi(true);
     try {
       const res = await getActiveSession();
-      if (res.data.data && res.data.data.length > 0) setSession(res.data.data[0]);
+      setSession(res.data.data);
     } catch {
-      // tidak ada session aktif
+      // no session
     } finally {
       setLoadingSesi(false);
     }
@@ -56,25 +53,14 @@ function DashboardAdmin() {
     fetchRekap(t);
   };
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    if (!namaKegiatan || !jamMulai || !jamSelesai) return;
-
-    const now = new Date().toISOString().split('T')[0];
+  const handleGenerate = async () => {
     setCreating(true);
     try {
-      const res = await createSession({
-        nama_kegiatan: namaKegiatan,
-        valid_from: `${now}T${jamMulai}:00`,
-        valid_until: `${now}T${jamSelesai}:00`,
-      });
+      const res = await generateSession();
       setSession(res.data.data);
-      setToast({ message: 'QR sesi berhasil dibuat!', type: 'success' });
-      setNamaKegiatan('');
-      setJamMulai('');
-      setJamSelesai('');
+      setToast({ message: res.data.message, type: 'success' });
     } catch (err) {
-      setToast({ message: err.response?.data?.message || 'Gagal membuat sesi', type: 'error' });
+      setToast({ message: err.response?.data?.message || 'Gagal generate QR', type: 'error' });
     } finally {
       setCreating(false);
     }
@@ -82,9 +68,9 @@ function DashboardAdmin() {
 
   const exportCSV = () => {
     if (attendances.length === 0) return;
-    const header = 'Nama,NIM,Jam Scan,Status,Kegiatan\n';
+    const header = 'Nama,NIM,Tanggal,Sesi Waktu,Jam Scan\n';
     const rows = attendances.map((a) =>
-      `"${a.nama}","${a.nim}","${new Date(a.waktu_scan).toLocaleString('id-ID')}","${a.status}","${a.kegiatan}"`
+      `"${a.nama}","${a.nim}","${a.tanggal}","${a.sesi_waktu}","${new Date(a.waktu).toLocaleTimeString('id-ID')}"`
     ).join('\n');
     const csv = header + rows;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -102,12 +88,23 @@ function DashboardAdmin() {
     window.location.href = '/login';
   };
 
-  const formatTime = (iso) => {
+  const formatDate = (iso) => {
     if (!iso) return '-';
-    return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  const totalHadir = attendances.filter((a) => a.status === 'hadir').length;
+  const rows = {};
+  attendances.forEach((a) => {
+    const key = `${a.user_id}-${a.tanggal}`;
+    if (!rows[key]) {
+      rows[key] = { nama: a.nama, nim: a.nim, tanggal: a.tanggal, siang: null, sore: null };
+    }
+    if (a.sesi_waktu === 'siang') rows[key].siang = a.waktu;
+    else if (a.sesi_waktu === 'sore') rows[key].sore = a.waktu;
+  });
+  const rekapRows = Object.values(rows);
+
+  const totalHadir = attendances.length;
 
   return (
     <div style={styles.container}>
@@ -122,58 +119,19 @@ function DashboardAdmin() {
       </header>
 
       <main style={styles.main}>
-        {/* === SECTION: Buat Sesi === */}
-        <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Buat Sesi Absen Baru</h2>
-          <form onSubmit={handleCreate} style={styles.form}>
-            <input
-              style={styles.input}
-              placeholder="Nama kegiatan (contoh: Briefing Pagi)"
-              value={namaKegiatan}
-              onChange={(e) => setNamaKegiatan(e.target.value)}
-              required
-            />
-            <div style={styles.row}>
-              <div style={styles.field}>
-                <label style={styles.label}>Jam Mulai</label>
-                <input
-                  style={styles.input}
-                  type="time"
-                  value={jamMulai}
-                  onChange={(e) => setJamMulai(e.target.value)}
-                  required
-                />
-              </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Jam Selesai</label>
-                <input
-                  style={styles.input}
-                  type="time"
-                  value={jamSelesai}
-                  onChange={(e) => setJamSelesai(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <Button type="submit" loading={creating}>
-              Buat Sesi Absen Hari Ini
-            </Button>
-          </form>
-        </div>
-
-        {/* === SECTION: QR Aktif === */}
+        {/* === SECTION: QR KKN Statis === */}
         {loadingSesi ? (
           <LoadingSpinner text="Memuat sesi..." />
         ) : session ? (
           <div style={styles.card}>
-            <h2 style={styles.cardTitle}>QR Sesi Aktif</h2>
+            <h2 style={styles.cardTitle}>QR KKN</h2>
+            <p style={styles.periodInfo}>
+              Berlaku: {formatDate(session.tanggal_mulai)} – {formatDate(session.tanggal_selesai)}
+            </p>
             <div style={styles.qrWrapper}>
               <QRCodeSVG value={session.qr_token} size={280} />
             </div>
-            <div style={styles.sessionInfo}>
-              <p><strong>Kegiatan:</strong> {session.nama_kegiatan}</p>
-              <p><strong>Berlaku:</strong> {formatTime(session.valid_from)} – {formatTime(session.valid_until)}</p>
-            </div>
+            <p style={styles.qrNote}>QR ini berlaku untuk seluruh periode KKN. Print/tempel di lokasi.</p>
             <Button
               variant="success"
               onClick={() => {
@@ -185,7 +143,17 @@ function DashboardAdmin() {
               Salin Token QR
             </Button>
           </div>
-        ) : null}
+        ) : (
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>Generate QR KKN</h2>
+            <p style={{ color: 'var(--text)', marginBottom: '16px' }}>
+              Belum ada QR KKN. Generate sekali untuk 40 hari ke depan.
+            </p>
+            <Button onClick={handleGenerate} loading={creating}>
+              Generate QR KKN
+            </Button>
+          </div>
+        )}
 
         {/* === SECTION: Rekap Kehadiran === */}
         <div style={styles.card}>
@@ -213,15 +181,13 @@ function DashboardAdmin() {
               style={styles.dateInput}
             />
             {!loadingRekap && attendances.length > 0 && (
-              <span style={styles.countBadge}>
-                Hadir: {totalHadir}/{attendances.length}
-              </span>
+              <span style={styles.countBadge}>Total absen: {totalHadir}</span>
             )}
           </div>
 
           {loadingRekap ? (
             <LoadingSpinner text="Memuat data..." />
-          ) : attendances.length === 0 ? (
+          ) : rekapRows.length === 0 ? (
             <EmptyState message="Belum ada yang absen hari ini" icon="📋" />
           ) : (
             <div style={styles.tableWrapper}>
@@ -230,26 +196,33 @@ function DashboardAdmin() {
                   <tr>
                     <th style={styles.th}>Nama</th>
                     <th style={styles.th}>NIM</th>
-                    <th style={styles.th}>Jam Scan</th>
-                    <th style={styles.th}>Status</th>
-                    <th style={styles.th}>Kegiatan</th>
+                    <th style={styles.th}>Tanggal</th>
+                    <th style={styles.th}>Siang</th>
+                    <th style={styles.th}>Sore</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {attendances.map((a) => (
-                    <tr key={a.id} style={styles.tr}>
-                      <td style={styles.td}>{a.nama}</td>
-                      <td style={styles.td}>{a.nim}</td>
+                  {rekapRows.map((r, i) => (
+                    <tr key={i} style={styles.tr}>
+                      <td style={styles.td}>{r.nama}</td>
+                      <td style={styles.td}>{r.nim}</td>
                       <td style={styles.td}>
-                        {new Date(a.waktu_scan).toLocaleTimeString('id-ID', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {new Date(r.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                       </td>
                       <td style={styles.td}>
-                        <StatusBadge status={a.status} />
+                        {r.siang ? (
+                          <StatusBadge status="hadir" />
+                        ) : (
+                          <span style={{ color: 'var(--text)', fontSize: '13px' }}>—</span>
+                        )}
                       </td>
-                      <td style={styles.td}>{a.kegiatan}</td>
+                      <td style={styles.td}>
+                        {r.sore ? (
+                          <StatusBadge status="hadir" />
+                        ) : (
+                          <span style={{ color: 'var(--text)', fontSize: '13px' }}>—</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -322,47 +295,21 @@ const styles = {
     margin: 0,
     color: 'var(--green)',
   },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    marginTop: '16px',
-  },
-  row: {
-    display: 'flex',
-    gap: '12px',
-  },
-  field: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-  label: {
+  periodInfo: {
     fontSize: '13px',
     color: 'var(--text)',
-    fontWeight: '500',
-  },
-  input: {
-    width: '100%',
-    padding: '12px 16px',
-    border: '1px solid #D1D5DB',
-    borderRadius: '8px',
-    fontSize: '16px',
-    outline: 'none',
-    boxSizing: 'border-box',
+    marginTop: '4px',
   },
   qrWrapper: {
     display: 'flex',
     justifyContent: 'center',
     padding: '16px 0',
   },
-  sessionInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-    fontSize: '15px',
-    color: 'var(--text-dark)',
+  qrNote: {
+    textAlign: 'center',
+    fontSize: '13px',
+    color: 'var(--text)',
+    marginBottom: '4px',
   },
   rekapHeader: {
     display: 'flex',
@@ -385,6 +332,11 @@ const styles = {
     gap: '8px',
     marginBottom: '16px',
     flexWrap: 'wrap',
+  },
+  label: {
+    fontSize: '13px',
+    color: 'var(--text)',
+    fontWeight: '500',
   },
   dateInput: {
     padding: '8px 12px',
