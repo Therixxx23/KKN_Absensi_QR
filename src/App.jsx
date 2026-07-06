@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ScanAbsen from './pages/ScanAbsen';
 import DashboardAdmin from './pages/DashboardAdmin';
+import AdminSessions from './pages/AdminSessions';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoadingSpinner from './components/LoadingSpinner';
 
@@ -61,6 +62,14 @@ function App() {
         element={
           <ProtectedRoute role="admin">
             <DashboardAdmin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/sessions"
+        element={
+          <ProtectedRoute role="admin">
+            <AdminSessions />
           </ProtectedRoute>
         }
       />

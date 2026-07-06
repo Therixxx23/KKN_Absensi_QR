@@ -31,10 +31,13 @@ Simple, friendly, cepat dipakai di lapangan (banyak mahasiswa akan akses dari HP
 - Setelah scan sukses: tampilkan konfirmasi besar "Absen berhasil ✓" + waktu
 - Kalau QR sudah expired/salah sesi: pesan error jelas
 
-### Admin — Generate QR
-- Tombol besar "Generate QR Hari Ini"
-- QR ditampilkan besar di tengah, bisa di-download/print
-- Info sesi: tanggal, jam berlaku
+### Admin — Kelola Sesi QR (Halaman Terpisah)
+- Form input tanggalMulai dan tanggalSelesai (date picker) → tombol "Generate QR Baru"
+- Setelah generate: QR langsung ditampilkan (pakai qrcode.react) dengan info tanggal berlaku
+- Daftar/riwayat semua sesi yang pernah dibuat (tabel: tanggal mulai, tanggal selesai, status aktif/nonaktif, total absen)
+- Tombol "Hapus" per baris sesi, dengan konfirmasi window.confirm (termasuk info jumlah data absen terkait)
+- Auto-refresh daftar setelah generate/hapus tanpa reload halaman
+- Tombol navigasi "Dashboard" di header untuk balik ke halaman rekap
 
 ### Dashboard Rekap
 - Tabel rekap kehadiran per mahasiswa/kelompok

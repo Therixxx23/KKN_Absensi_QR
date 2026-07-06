@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { getActiveSession, getAttendances, generateSession } from '../services/api';
+import { getActiveSession, getAttendances } from '../services/api';
 import Button from '../components/Button';
 import StatusBadge from '../components/StatusBadge';
 import Toast from '../components/Toast';
@@ -9,11 +10,11 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 function DashboardAdmin() {
   const user = JSON.parse(localStorage.getItem('user'));
+  const navigate = useNavigate();
   const [session, setSession] = useState(null);
   const [attendances, setAttendances] = useState([]);
   const [loadingSesi, setLoadingSesi] = useState(false);
   const [loadingRekap, setLoadingRekap] = useState(false);
-  const [creating, setCreating] = useState(false);
   const [toast, setToast] = useState(null);
   const [filterTanggal, setFilterTanggal] = useState(new Date().toISOString().split('T')[0]);
 
@@ -51,19 +52,6 @@ function DashboardAdmin() {
     const t = e.target.value;
     setFilterTanggal(t);
     fetchRekap(t);
-  };
-
-  const handleGenerate = async () => {
-    setCreating(true);
-    try {
-      const res = await generateSession();
-      setSession(res.data.data);
-      setToast({ message: res.data.message, type: 'success' });
-    } catch (err) {
-      setToast({ message: err.response?.data?.message || 'Gagal generate QR', type: 'error' });
-    } finally {
-      setCreating(false);
-    }
   };
 
   const exportCSV = () => {
@@ -113,6 +101,7 @@ function DashboardAdmin() {
       <header style={styles.header}>
         <h1 style={styles.title}>Admin QR</h1>
         <div style={styles.headerRight}>
+          <button onClick={() => navigate('/admin/sessions')} style={styles.sessionsBtn}>Kelola Sesi</button>
           <span style={styles.userName}>{user?.nama}</span>
           <button onClick={handleLogout} style={styles.logoutBtn}>Keluar</button>
         </div>
@@ -145,12 +134,12 @@ function DashboardAdmin() {
           </div>
         ) : (
           <div style={styles.card}>
-            <h2 style={styles.cardTitle}>Generate QR KKN</h2>
+            <h2 style={styles.cardTitle}>Belum Ada Sesi Aktif</h2>
             <p style={{ color: 'var(--text)', marginBottom: '16px' }}>
-              Belum ada QR KKN. Generate sekali untuk 40 hari ke depan.
+              Buat sesi QR baru dengan rentang tanggal yang diinginkan.
             </p>
-            <Button onClick={handleGenerate} loading={creating}>
-              Generate QR KKN
+            <Button onClick={() => navigate('/admin/sessions')}>
+              Kelola Sesi QR
             </Button>
           </div>
         )}
@@ -265,6 +254,15 @@ const styles = {
   userName: {
     fontSize: '14px',
     color: 'var(--text)',
+  },
+  sessionsBtn: {
+    padding: '6px 14px',
+    background: '#E8F5E9',
+    color: 'var(--green)',
+    border: '1px solid var(--green)',
+    borderRadius: '6px',
+    fontSize: '13px',
+    cursor: 'pointer',
   },
   logoutBtn: {
     padding: '6px 14px',

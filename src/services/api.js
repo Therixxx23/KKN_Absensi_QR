@@ -41,4 +41,16 @@ export function verifyToken() {
   return api.get('/auth/verify');
 }
 
+export function getAllSessions() {
+  return api.get('/sessions');
+}
+
+export function createSession(tanggalMulai, tanggalSelesai) {
+  return api.post('/sessions', { tanggalMulai, tanggalSelesai });
+}
+
+export function deleteSession(id) {
+  return api.delete('/sessions', { params: { id } });
+}
+
 export default api;
