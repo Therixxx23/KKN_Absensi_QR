@@ -19,8 +19,8 @@ export function createSession(data) {
   return api.post('/sessions', data);
 }
 
-export function submitAttendance(token) {
-  return api.post('/attendances', { token });
+export function submitAttendance(token, userId) {
+  return api.post('/attendances', { token, user_id: userId });
 }
 
 export function getAttendances(params) {
