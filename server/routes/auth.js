@@ -6,7 +6,7 @@ import { hashPassword, comparePassword } from '../utils/hash.js';
 const router = Router();
 
 router.post('/register', async (req, res) => {
-  const { nama, nim, email, password, kelompok } = req.body;
+  const { nama, nim, email, password } = req.body;
 
   if (!nama || !nim || !password) {
     return res.status(400).json({ success: false, message: 'Nama, NIM, dan password harus diisi' });
@@ -31,7 +31,7 @@ router.post('/register', async (req, res) => {
     email: email || '',
     password_hash,
     role: 'mahasiswa',
-    kelompok: kelompok || '',
+
   };
 
   users.push(user);
@@ -72,7 +72,6 @@ router.post('/login', async (req, res) => {
         nim: user.nim,
         nama: user.nama,
         role: user.role,
-        kelompok: user.kelompok,
       },
     },
   });

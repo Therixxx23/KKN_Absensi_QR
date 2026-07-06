@@ -17,11 +17,11 @@ async function hash(pw) {
 
 async function main() {
   const users = [
-    { id: crypto.randomUUID(), nim: 'admin', nama: 'Koordinator KKN', role: 'admin', email: '', password_hash: await hash('admin123'), kelompok: '' },
-    { id: crypto.randomUUID(), nim: '220101001', nama: 'Andi Pratama', role: 'mahasiswa', email: '', password_hash: await hash('12345678'), kelompok: 'Kelompok 1' },
-    { id: crypto.randomUUID(), nim: '220101002', nama: 'Siti Rahmawati', role: 'mahasiswa', email: '', password_hash: await hash('12345678'), kelompok: 'Kelompok 1' },
-    { id: crypto.randomUUID(), nim: '220101003', nama: 'Budi Santoso', role: 'mahasiswa', email: '', password_hash: await hash('12345678'), kelompok: 'Kelompok 1' },
-    { id: crypto.randomUUID(), nim: '220101004', nama: 'Dewi Lestari', role: 'mahasiswa', email: '', password_hash: await hash('12345678'), kelompok: 'Kelompok 1' },
+    { id: crypto.randomUUID(), nim: 'admin', nama: 'Koordinator KKN', role: 'admin', email: '', password_hash: await hash('admin123') },
+    { id: crypto.randomUUID(), nim: '220101001', nama: 'Andi Pratama', role: 'mahasiswa', email: '', password_hash: await hash('12345678') },
+    { id: crypto.randomUUID(), nim: '220101002', nama: 'Siti Rahmawati', role: 'mahasiswa', email: '', password_hash: await hash('12345678') },
+    { id: crypto.randomUUID(), nim: '220101003', nama: 'Budi Santoso', role: 'mahasiswa', email: '', password_hash: await hash('12345678') },
+    { id: crypto.randomUUID(), nim: '220101004', nama: 'Dewi Lestari', role: 'mahasiswa', email: '', password_hash: await hash('12345678') },
   ];
 
   writeFileSync(join(dataDir, 'users.json'), JSON.stringify(users, null, 2));

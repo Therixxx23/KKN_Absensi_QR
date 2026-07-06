@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../services/api';
 
 function Register() {
-  const [form, setForm] = useState({ nama: '', nim: '', email: '', password: '', kelompok: '' });
+  const [form, setForm] = useState({ nama: '', nim: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -104,23 +104,7 @@ function Register() {
             {fieldErrors.password && <p style={styles.fieldError}>{fieldErrors.password}</p>}
           </div>
 
-          <div>
-            <label style={styles.label}>Kelompok KKN</label>
-            <select
-              style={styles.input}
-              name="kelompok"
-              value={form.kelompok}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Pilih kelompok</option>
-              <option value="Kelompok 1">Kelompok 1</option>
-              <option value="Kelompok 2">Kelompok 2</option>
-              <option value="Kelompok 3">Kelompok 3</option>
-              <option value="Kelompok 4">Kelompok 4</option>
-              <option value="Kelompok 5">Kelompok 5</option>
-            </select>
-          </div>
+
 
           <button style={styles.button} type="submit" disabled={loading}>
             {loading ? 'Mendaftarkan...' : 'Daftar'}
