@@ -1,24 +1,61 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { readDB, writeDB } from '../db.js';
+import { hashPassword, comparePassword } from '../utils/hash.js';
 
 const router = Router();
 
-function hashPassword(password) {
-  return crypto.createHash('sha256').update(password).digest('hex');
-}
+router.post('/register', async (req, res) => {
+  const { nama, nim, email, password, kelompok } = req.body;
 
-router.post('/login', (req, res) => {
+  if (!nama || !nim || !password) {
+    return res.status(400).json({ success: false, message: 'Nama, NIM, dan password harus diisi' });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ success: false, message: 'Password minimal 8 karakter' });
+  }
+
+  const users = readDB('users');
+  const existing = users.find((u) => u.nim === nim);
+  if (existing) {
+    return res.status(400).json({ success: false, message: 'NIM sudah terdaftar' });
+  }
+
+  const password_hash = await hashPassword(password);
+
+  const user = {
+    id: crypto.randomUUID(),
+    nim,
+    nama,
+    email: email || '',
+    password_hash,
+    role: 'mahasiswa',
+    kelompok: kelompok || '',
+  };
+
+  users.push(user);
+  writeDB('users', users);
+
+  res.status(201).json({ success: true, message: 'Registrasi berhasil, silakan login' });
+});
+
+router.post('/login', async (req, res) => {
   const { nim, password } = req.body;
   if (!nim || !password) {
-    return res.status(400).json({ message: 'NIM dan password harus diisi' });
+    return res.status(400).json({ success: false, message: 'NIM dan password harus diisi' });
   }
 
   const users = readDB('users');
   const user = users.find((u) => u.nim === nim);
 
-  if (!user || user.password_hash !== hashPassword(password)) {
-    return res.status(401).json({ message: 'NIM atau password salah' });
+  if (!user) {
+    return res.status(401).json({ success: false, message: 'NIM atau password salah' });
+  }
+
+  const valid = await comparePassword(password, user.password_hash);
+  if (!valid) {
+    return res.status(401).json({ success: false, message: 'NIM atau password salah' });
   }
 
   const token = crypto.randomUUID();
@@ -26,13 +63,17 @@ router.post('/login', (req, res) => {
   writeDB('users', users);
 
   res.json({
-    token,
-    user: {
-      id: user.id,
-      nim: user.nim,
-      nama: user.nama,
-      role: user.role,
-      kelompok_id: user.kelompok_id,
+    success: true,
+    message: 'Login berhasil',
+    data: {
+      token,
+      user: {
+        id: user.id,
+        nim: user.nim,
+        nama: user.nama,
+        role: user.role,
+        kelompok: user.kelompok,
+      },
     },
   });
 });

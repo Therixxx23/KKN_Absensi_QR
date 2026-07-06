@@ -6,7 +6,7 @@ function Toast({ message, type = 'success', onClose }) {
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const bgColor = type === 'success' ? 'var(--green)' : type === 'error' ? 'var(--red)' : 'var(--blue)';
+  const bgColor = type === 'success' ? 'var(--green)' : type === 'error' ? 'var(--red)' : '#1976D2';
 
   return (
     <div

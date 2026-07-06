@@ -29,7 +29,7 @@ function DashboardAdmin() {
     setLoadingSesi(true);
     try {
       const res = await getActiveSession();
-      if (res.data.length > 0) setSession(res.data[0]);
+      if (res.data.data && res.data.data.length > 0) setSession(res.data.data[0]);
     } catch {
       // tidak ada session aktif
     } finally {
@@ -42,7 +42,7 @@ function DashboardAdmin() {
     try {
       const t = tanggal || filterTanggal;
       const res = await getAttendances({ tanggal: t });
-      setAttendances(res.data);
+      setAttendances(res.data.data || []);
     } catch {
       setAttendances([]);
     } finally {
@@ -68,7 +68,7 @@ function DashboardAdmin() {
         valid_from: `${now}T${jamMulai}:00`,
         valid_until: `${now}T${jamSelesai}:00`,
       });
-      setSession(res.data);
+      setSession(res.data.data);
       setToast({ message: 'QR sesi berhasil dibuat!', type: 'success' });
       setNamaKegiatan('');
       setJamMulai('');
@@ -282,7 +282,7 @@ const styles = {
   title: {
     fontSize: '20px',
     fontWeight: 'bold',
-    color: 'var(--text-dark)',
+    color: 'var(--green)',
   },
   headerRight: {
     display: 'flex',
@@ -320,7 +320,7 @@ const styles = {
     fontSize: '18px',
     fontWeight: '600',
     margin: 0,
-    color: 'var(--text-dark)',
+    color: 'var(--green)',
   },
   form: {
     display: 'flex',

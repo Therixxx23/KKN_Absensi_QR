@@ -7,6 +7,10 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+export function register(data) {
+  return api.post('/auth/register', data);
+}
+
 export function login(nim, password) {
   return api.post('/auth/login', { nim, password });
 }
@@ -15,8 +19,16 @@ export function getActiveSession() {
   return api.get('/sessions/active');
 }
 
+export function getTodaySession() {
+  return api.get('/sessions/today');
+}
+
 export function createSession(data) {
   return api.post('/sessions', data);
+}
+
+export function generateSession(data) {
+  return api.post('/sessions/generate', data);
 }
 
 export function submitAttendance(token, userId) {

@@ -1,7 +1,7 @@
 function Button({ children, variant = 'primary', loading, disabled, onClick, style, ...props }) {
   const colors = {
-    primary: 'var(--blue)',
-    success: 'var(--green)',
+    primary: 'var(--green)',
+    success: '#4CAF50',
     danger: 'var(--red)',
   };
 

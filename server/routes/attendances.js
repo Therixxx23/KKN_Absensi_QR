@@ -8,18 +8,18 @@ router.post('/', (req, res) => {
   const { token, user_id } = req.body;
 
   if (!token || !user_id) {
-    return res.status(400).json({ message: 'Token dan user_id harus diisi' });
+    return res.status(400).json({ success: false, message: 'Token dan user_id harus diisi' });
   }
 
   const sessions = readDB('sessions');
   const session = sessions.find((s) => s.qr_token === token);
 
   if (!session) {
-    return res.status(400).json({ message: 'QR tidak valid, silakan scan ulang' });
+    return res.status(400).json({ success: false, message: 'QR tidak valid, silakan scan ulang' });
   }
 
   if (!session.aktif) {
-    return res.status(400).json({ message: 'Sesi absen sudah ditutup oleh admin' });
+    return res.status(400).json({ success: false, message: 'Sesi absen sudah ditutup oleh admin' });
   }
 
   const now = new Date();
@@ -27,11 +27,11 @@ router.post('/', (req, res) => {
   const validUntil = new Date(session.valid_until);
 
   if (now < validFrom) {
-    return res.status(400).json({ message: 'Sesi absen belum dimulai, tunggu hingga waktu yang ditentukan' });
+    return res.status(400).json({ success: false, message: 'Sesi absen belum dimulai, tunggu hingga waktu yang ditentukan' });
   }
 
   if (now > validUntil) {
-    return res.status(400).json({ message: 'QR sudah kadaluarsa, minta admin buat yang baru ya' });
+    return res.status(400).json({ success: false, message: 'QR sudah kadaluarsa, minta admin buat yang baru ya' });
   }
 
   const attendances = readDB('attendances');
@@ -40,7 +40,7 @@ router.post('/', (req, res) => {
   );
 
   if (sudahAbsen) {
-    return res.status(400).json({ message: 'Kamu sudah absen di sesi ini' });
+    return res.status(400).json({ success: false, message: 'Kamu sudah absen di sesi ini' });
   }
 
   const attendance = {
@@ -58,7 +58,8 @@ router.post('/', (req, res) => {
   const user = users.find((u) => u.id === user_id);
 
   res.status(201).json({
-    message: `Absen berhasil!`,
+    success: true,
+    message: 'Absen berhasil!',
     data: {
       nama: user?.nama || 'Mahasiswa',
       waktu: attendance.waktu_scan,
@@ -90,7 +91,7 @@ router.get('/', (req, res) => {
     };
   });
 
-  res.json(result);
+  res.json({ success: true, data: result });
 });
 
 export default router;

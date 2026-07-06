@@ -1,14 +1,18 @@
 :root {
-  --green: #22C55E;
-  --red: #EF4444;
+  --green: #2E7D32;
+  --green-light: #4CAF50;
+  --green-bg: #E8F5E9;
+  --red: #E53935;
+  --red-bg: #FFEBEE;
   --yellow: #F59E0B;
   --blue: #3B82F6;
-  --bg: #F3F4F6;
+  --bg: #F5F5F5;
   --text: #6B7280;
-  --text-dark: #111827;
+  --text-dark: #1F2937;
   --white: #FFFFFF;
+  --border: #E0E0E0;
 
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
   line-height: 1.5;
   color: var(--text-dark);
@@ -31,13 +35,17 @@ body {
   flex-direction: column;
 }
 
-input, button {
+input, button, select {
   font: inherit;
 }
 
 a {
-  color: var(--blue);
+  color: var(--green);
   text-decoration: none;
+  font-weight: 500;
+}
+a:hover {
+  text-decoration: underline;
 }
 
 @keyframes spin {

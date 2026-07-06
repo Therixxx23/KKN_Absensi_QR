@@ -131,7 +131,7 @@ const spinnerStyle = {
   width: '40px',
   height: '40px',
   border: '4px solid #E5E7EB',
-  borderTopColor: 'var(--blue)',
+  borderTopColor: 'var(--green)',
   borderRadius: '50%',
   animation: 'spin 0.7s linear infinite',
 };
@@ -154,7 +154,7 @@ const styles = {
   title: {
     fontSize: '20px',
     fontWeight: 'bold',
-    color: 'var(--text-dark)',
+    color: 'var(--green)',
   },
   logoutBtn: {
     padding: '6px 14px',
@@ -226,7 +226,7 @@ const styles = {
   scanAgainBtn: {
     marginTop: '8px',
     padding: '12px 32px',
-    background: 'var(--blue)',
+    background: 'var(--green)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',

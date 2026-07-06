@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
 
 function Login() {
@@ -6,6 +7,7 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -13,9 +15,10 @@ function Login() {
     setLoading(true);
     try {
       const res = await login(nim, password);
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      window.location.href = res.data.user.role === 'admin' ? '/admin' : '/scan';
+      const { token, user } = res.data.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      navigate(user.role === 'admin' ? '/admin' : '/scan');
     } catch (err) {
       setError(err.response?.data?.message || 'NIM atau password salah');
     } finally {
@@ -27,8 +30,8 @@ function Login() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>Absensi QR KKN</h1>
-        <p style={styles.subtitle}>Masuk untuk melanjutkan</p>
-        {error && <p style={styles.error}>{error}</p>}
+        <p style={styles.subtitle}>Masuk sebagai peserta KKN</p>
+        {error && <div style={styles.alert}>{error}</div>}
         <form onSubmit={handleSubmit} style={styles.form}>
           <input
             style={styles.input}
@@ -50,6 +53,9 @@ function Login() {
             {loading ? 'Memproses...' : 'Masuk'}
           </button>
         </form>
+        <p style={styles.footer}>
+          Belum punya akun? <Link to="/register">Daftar di sini</Link>
+        </p>
       </div>
     </div>
   );
@@ -77,7 +83,7 @@ const styles = {
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: '4px',
-    color: 'var(--text-dark)',
+    color: 'var(--green)',
   },
   subtitle: {
     fontSize: '14px',
@@ -85,10 +91,13 @@ const styles = {
     color: 'var(--text)',
     marginBottom: '24px',
   },
-  error: {
+  alert: {
+    background: 'var(--red-bg)',
     color: 'var(--red)',
     fontSize: '14px',
     textAlign: 'center',
+    padding: '10px 12px',
+    borderRadius: '8px',
     marginBottom: '12px',
   },
   form: {
@@ -99,7 +108,7 @@ const styles = {
   input: {
     width: '100%',
     padding: '12px 16px',
-    border: '1px solid #D1D5DB',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '16px',
     outline: 'none',
@@ -107,7 +116,7 @@ const styles = {
   button: {
     width: '100%',
     padding: '14px',
-    background: 'var(--blue)',
+    background: 'var(--green)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -115,6 +124,13 @@ const styles = {
     fontWeight: '600',
     cursor: 'pointer',
     minHeight: '48px',
+    opacity: 1,
+  },
+  footer: {
+    marginTop: '16px',
+    textAlign: 'center',
+    fontSize: '14px',
+    color: 'var(--text)',
   },
 };
 
