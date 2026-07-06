@@ -7,6 +7,14 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export function register(data) {
   return api.post('/auth/register', data);
 }
@@ -37,6 +45,10 @@ export function submitAttendance(token, userId) {
 
 export function getAttendances(params) {
   return api.get('/attendances', { params });
+}
+
+export function verifyToken() {
+  return api.get('/auth/verify');
 }
 
 export default api;

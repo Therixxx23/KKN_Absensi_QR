@@ -77,4 +77,27 @@ router.post('/login', async (req, res) => {
   });
 });
 
+router.get('/verify', (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Token tidak ditemukan' });
+  }
+
+  const users = readDB('users');
+  const user = users.find((u) => u.token === token);
+  if (!user) {
+    return res.status(401).json({ success: false, message: 'Token tidak valid' });
+  }
+
+  res.json({
+    success: true,
+    data: {
+      id: user.id,
+      nim: user.nim,
+      nama: user.nama,
+      role: user.role,
+    },
+  });
+});
+
 export default router;
