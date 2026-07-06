@@ -6,6 +6,15 @@ import { pendingScan } from '../utils/pendingScan';
 
 const QR_BOX_SIZE = 250;
 
+function extractToken(input) {
+  try {
+    const url = new URL(input);
+    return url.searchParams.get('token') || input;
+  } catch {
+    return input;
+  }
+}
+
 function ScanAbsen() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
@@ -57,7 +66,7 @@ function ScanAbsen() {
         await scanner.stop();
         setStatus('loading');
         try {
-          const res = await submitAttendance(decodedText, user.id);
+          const res = await submitAttendance(extractToken(decodedText), user.id);
           setResult(res.data.data);
           setStatus('success');
         } catch (err) {

@@ -143,7 +143,7 @@ function AdminSessions() {
               Berlaku: {formatDate(newSession.tanggal_mulai)} – {formatDate(newSession.tanggal_selesai)}
             </p>
             <div style={styles.qrWrapper}>
-              <QRCodeSVG value={newSession.qr_token} size={260} />
+              <QRCodeSVG value={`${window.location.origin}/scan?token=${newSession.qr_token}`} size={260} />
             </div>
             <p style={styles.qrNote}>Print/tempel QR ini di lokasi KKN.</p>
             <Button

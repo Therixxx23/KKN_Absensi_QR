@@ -118,7 +118,7 @@ function DashboardAdmin() {
               Berlaku: {formatDate(session.tanggal_mulai)} – {formatDate(session.tanggal_selesai)}
             </p>
             <div style={styles.qrWrapper}>
-              <QRCodeSVG value={session.qr_token} size={280} />
+              <QRCodeSVG value={`${window.location.origin}/scan?token=${session.qr_token}`} size={280} />
             </div>
             <p style={styles.qrNote}>QR ini berlaku untuk seluruh periode KKN. Print/tempel di lokasi.</p>
             <Button
