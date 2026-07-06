@@ -2,76 +2,85 @@
 
 ## Tech Stack
 - **Frontend**: React (Vite) + `html5-qrcode` (scan QR) + `qrcode.react` (generate QR) + `react-router-dom` + `axios`
-- **Backend**: Node.js + Express, database awal pakai file JSON (rencana upgrade ke Supabase/PostgreSQL untuk production)
-- **Auth**: bcrypt untuk hash password
-- **Deployment**: Frontend → Vercel, Backend → Railway/Render
+- **Backend**: Vercel Serverless Functions + Supabase (PostgreSQL)
+- **Auth**: bcrypt untuk hash password, JWT untuk token
+- **Deployment**: Frontend + Backend → Vercel (monorepo dengan folder `api/`)
+- **Database**: Supabase (PostgreSQL)
 
-## Struktur Folder (usulan)
+## Struktur Folder
 ```
-absensi-qr-kkn/
-├── backend/
-│   ├── data/
-│   │   ├── users.json
-│   │   ├── sessions.json
-│   │   └── attendances.json
+kkn-absensi-qr/
+├── api/                   # Vercel Serverless Functions
+│   ├── auth/
+│   │   ├── register.js    # POST - daftar mahasiswa
+│   │   ├── login.js       # POST - login, return JWT
+│   │   └── verify.js      # GET - verifikasi JWT
+│   ├── sessions/
+│   │   ├── today.js       # GET - ambil sesi QR aktif
+│   │   └── generate.js    # POST - generate sesi QR baru
+│   └── attendances/
+│       └── index.js       # POST - submit absen, GET - rekap
+├── lib/
+│   └── supabaseClient.js  # Koneksi Supabase dari env var
+├── src/                   # Frontend React
+│   ├── pages/
+│   │   ├── Login.jsx
+│   │   ├── Register.jsx
+│   │   ├── ScanAbsen.jsx
+│   │   └── DashboardAdmin.jsx
+│   ├── components/
+│   │   └── ...
+│   └── services/api.js
+├── server/                # (deprecated) Express backend lama — tidak dipakai di Vercel
 │   ├── routes/
-│   │   ├── auth.js        # login + register
-│   │   ├── sessions.js
-│   │   └── attendances.js
 │   ├── middleware/
-│   │   └── authMiddleware.js
 │   ├── utils/
-│   │   └── hash.js
-│   └── server.js
-└── frontend/
-    ├── src/
-    │   ├── pages/
-    │   │   ├── Login.jsx
-    │   │   ├── Register.jsx      # BARU
-    │   │   ├── ScanAbsen.jsx
-    │   │   ├── AdminGenerateQR.jsx
-    │   │   └── Dashboard.jsx
-    │   ├── components/
-    │   ├── services/api.js
-    │   └── App.jsx
+│   └── index.js
+├── vercel.json
+├── render.yaml            # (opsional) untuk deploy backend alternatif
+└── .env.example
 ```
 
-## Urutan Prioritas Fitur (Updated)
-1. Setup project (frontend + backend scaffolding)
-2. **Login & Register** (mahasiswa bisa daftar sendiri, admin/DPL dibuat manual)
-3. Backend dasar (struktur data users, sessions, attendances)
-4. Admin generate QR harian
-5. Scan absen (mahasiswa)
-6. Dashboard rekap kehadiran
+## Alur Auth (JWT)
+- **Register**: password di-hash bcrypt, role otomatis `mahasiswa`. NIM dicek unik via Supabase.
+- **Login**: verifikasi password dengan bcrypt.compare, generate JWT (`jsonwebtoken.sign`) dengan payload `{ id, nim, role }`, expire 7 hari.
+- **Verify**: decode JWT (`jsonwebtoken.verify`), ambil user dari Supabase berdasarkan `decoded.id`.
 
-## Rancangan Fitur Register (BARU)
-- Form: Nama, NIM, Email (opsional), Password, Kelompok KKN
-- Validasi:
-  - NIM harus unik (cek ke `users.json` sebelum simpan)
-  - Password minimal 8 karakter, di-hash dengan bcrypt sebelum disimpan
-  - Role otomatis diset `"mahasiswa"` saat register mandiri — TIDAK bisa dipilih dari form
-  - Role `"admin"` / `"dpl"` hanya dibuat manual langsung di `users.json` atau lewat script seed, bukan lewat form register
-- Endpoint: `POST /api/auth/register`
-  - Body: `{ nama, nim, email?, password, kelompok }`
-  - Response sukses: `{ success: true, message: "Registrasi berhasil, silakan login" }`
-  - Response gagal (NIM sudah ada): `{ success: false, message: "NIM sudah terdaftar" }`
-- **Catatan keamanan (versi awal)**: Register masih terbuka untuk NIM apa saja (tidak divalidasi ke daftar peserta KKN resmi). Ini adalah simplifikasi yang disengaja untuk versi awal/sederhana. Kalau nanti mau lebih aman, tambahkan tabel/list `peserta_resmi` (NIM + nama yang sudah didata panitia) dan validasi NIM harus ada di list itu sebelum register diterima.
+Environment variables yang perlu di Vercel:
+- `SUPABASE_URL` — URL project Supabase
+- `SUPABASE_KEY` — Service role key (atau anon key dengan RLS diatur sesuai kebutuhan)
+- `JWT_SECRET` — Secret untuk sign/verify JWT
 
 ## Aturan Coding
 - Konsisten pakai async/await, hindari callback bertumpuk
 - Setiap endpoint backend wajib return format `{ success, message, data? }`
 - Validasi input di sisi backend, jangan percaya validasi frontend saja
-- Password TIDAK PERNAH disimpan plain text — selalu lewat bcrypt (`bcrypt.hash`, `bcrypt.compare`)
-- Pisahkan logic auth (login/register) di `routes/auth.js`, jangan campur dengan routes lain
+- Password TIDAK PERNAH disimpan plain text — selalu lewat bcrypt
+- File di `api/` export default function handler(req, res) sesuai format Vercel Serverless Functions
+- Branching method (GET/POST) dilakukan manual di dalam handler
+
+## Environment Variables (Vercel)
+| Variable        | Wajib | Keterangan                              |
+|-----------------|-------|-----------------------------------------|
+| SUPABASE_URL    | Ya    | URL project Supabase                    |
+| SUPABASE_KEY    | Ya    | Supabase anon key atau service_role key |
+| JWT_SECRET      | Ya    | Secret key untuk JWT                    |
+
+## Development Lokal
+1. Jalankan Express backend lama di `server/` untuk testing API:
+   ```bash
+   cd server
+   npm install
+   npm run dev
+   ```
+2. Jalankan frontend dengan Vite:
+   ```bash
+   npm run dev
+   ```
+   Vite proxy akan meneruskan `/api/*` ke `http://localhost:5000`.
 
 ## Git Workflow (Wajib)
-- Commit kecil per fitur, message jelas (contoh: `feat: add register page`, `fix: validate unique NIM`)
-- Branch terpisah untuk fitur besar (contoh: `feature/register`, `feature/admin-qr`)
+- Commit kecil per fitur, message jelas
+- Branch terpisah untuk fitur besar
 - Sebelum merge ke `main`: pastikan fitur sudah dites manual jalan
-- Rollback pakai `git revert <commit-hash>` — jangan pakai `git reset --hard` di branch yang sudah di-push bareng
-
-## Checklist Sebelum Push
-- [ ] Tidak ada `console.log` sisa debugging
-- [ ] Tidak ada credential/password hardcoded
-- [ ] Endpoint baru sudah dites (Postman/Thunder Client atau manual dari frontend)
-- [ ] File JSON data tidak ikut ter-commit kalau isinya data testing sensitif
+- Rollback pakai `git revert <commit-hash>`
