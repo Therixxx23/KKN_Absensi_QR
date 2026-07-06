@@ -1,15 +1,47 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
 import { submitAttendance } from '../services/api';
+import { pendingScan } from '../utils/pendingScan';
 
 const QR_BOX_SIZE = 250;
 
 function ScanAbsen() {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
+  const token = localStorage.getItem('token');
   const scannerRef = useRef(null);
-  const [status, setStatus] = useState('scanning');
+  const [status, setStatus] = useState('loading');
   const [result, setResult] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const qrTokenFromUrl = params.get('token');
+
+    if (!token || !user) {
+      if (qrTokenFromUrl) {
+        pendingScan.set(qrTokenFromUrl);
+        navigate('/login?pending=1', { replace: true });
+      } else {
+        navigate('/login', { replace: true });
+      }
+      return;
+    }
+
+    if (user.role !== 'mahasiswa') {
+      navigate('/admin', { replace: true });
+      return;
+    }
+
+    if (qrTokenFromUrl) {
+      processAttendance(qrTokenFromUrl, user.id);
+    } else {
+      setStatus('scanning');
+      setShowScanner(true);
+    }
+  }, []);
 
   const startScanner = useCallback(() => {
     const scanner = new Html5Qrcode('qr-reader');
@@ -41,19 +73,33 @@ function ScanAbsen() {
   }, [user.id]);
 
   useEffect(() => {
-    startScanner();
+    if (showScanner) {
+      startScanner();
+    }
     return () => {
       if (scannerRef.current) {
         try { scannerRef.current.stop(); } catch {}
       }
     };
-  }, [startScanner]);
+  }, [showScanner, startScanner]);
+
+  async function processAttendance(qrToken, userId) {
+    setStatus('loading');
+    try {
+      const res = await submitAttendance(qrToken, userId);
+      setResult(res.data.data);
+      setStatus('success');
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || 'Gagal absen, coba lagi');
+      setStatus('error');
+    }
+  }
 
   const handleScanLagi = () => {
     setStatus('scanning');
     setResult(null);
     setErrorMsg('');
-    startScanner();
+    setShowScanner(true);
   };
 
   return (
@@ -73,19 +119,19 @@ function ScanAbsen() {
       </header>
 
       <main style={styles.main}>
+        {status === 'loading' && (
+          <div style={styles.statusBox}>
+            <div style={spinnerStyle} />
+            <p style={styles.loadingText}>Memproses absen...</p>
+          </div>
+        )}
+
         {status === 'scanning' && (
           <>
             <p style={styles.instruction}>Arahkan kamera ke QR Code KKN</p>
             <div id="qr-reader" style={styles.reader} />
             <p style={styles.hint}>Mengarahkan ke QR...</p>
           </>
-        )}
-
-        {status === 'loading' && (
-          <div style={styles.statusBox}>
-            <div style={spinnerStyle} />
-            <p style={styles.loadingText}>Memproses absen...</p>
-          </div>
         )}
 
         {status === 'success' && result && (

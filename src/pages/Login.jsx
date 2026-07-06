@@ -1,13 +1,34 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { login } from '../services/api';
+import { pendingScan } from '../utils/pendingScan';
 
 function Login() {
   const [nim, setNim] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('pending') || pendingScan.get()) {
+      setInfo('Login dulu untuk melanjutkan absen');
+    }
+
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (token && user) {
+      const pending = pendingScan.get();
+      if (pending) {
+        pendingScan.clear();
+        navigate(`/scan?token=${pending}`, { replace: true });
+      } else {
+        navigate(user.role === 'admin' ? '/admin' : '/scan', { replace: true });
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,7 +39,14 @@ function Login() {
       const { token, user } = res.data.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      navigate(user.role === 'admin' ? '/admin' : '/scan');
+
+      const pending = pendingScan.get();
+      if (pending) {
+        pendingScan.clear();
+        navigate(`/scan?token=${pending}`, { replace: true });
+      } else {
+        navigate(user.role === 'admin' ? '/admin' : '/scan', { replace: true });
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'NIM atau password salah');
     } finally {
@@ -31,6 +59,7 @@ function Login() {
       <div style={styles.card}>
         <h1 style={styles.title}>Absensi QR KKN</h1>
         <p style={styles.subtitle}>Masuk sebagai peserta KKN</p>
+        {info && <div style={styles.alertInfo}>{info}</div>}
         {error && <div style={styles.alert}>{error}</div>}
         <form onSubmit={handleSubmit} style={styles.form}>
           <input
@@ -90,6 +119,15 @@ const styles = {
     textAlign: 'center',
     color: 'var(--text)',
     marginBottom: '24px',
+  },
+  alertInfo: {
+    background: '#E8F5E9',
+    color: 'var(--green)',
+    fontSize: '14px',
+    textAlign: 'center',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    marginBottom: '12px',
   },
   alert: {
     background: 'var(--red-bg)',

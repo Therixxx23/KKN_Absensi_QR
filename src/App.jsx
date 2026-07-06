@@ -22,21 +22,29 @@ function App() {
       return;
     }
 
+    const publicPaths = ['/', '/login', '/register'];
+
     verifyToken()
       .then((res) => {
         if (res.data.success) {
-          const target = user.role === 'admin' ? '/admin' : '/scan';
-          navigate(target, { replace: true });
+          if (publicPaths.includes(window.location.pathname)) {
+            const target = user.role === 'admin' ? '/admin' : '/scan';
+            navigate(target, { replace: true });
+          }
         } else {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          navigate('/login', { replace: true });
+          if (publicPaths.includes(window.location.pathname)) {
+            navigate('/login', { replace: true });
+          }
         }
       })
       .catch(() => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        navigate('/login', { replace: true });
+        if (publicPaths.includes(window.location.pathname)) {
+          navigate('/login', { replace: true });
+        }
       })
       .finally(() => setAuthReady(true));
   }, []);
@@ -49,14 +57,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route
-        path="/scan"
-        element={
-          <ProtectedRoute role="mahasiswa">
-            <ScanAbsen />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/scan" element={<ScanAbsen />} />
       <Route
         path="/admin"
         element={
