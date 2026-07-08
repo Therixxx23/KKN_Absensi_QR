@@ -1,22 +1,17 @@
+import logoSrc from '../assets/logokkn.png';
+
 function Logo({ maxWidth = 200 }) {
   return (
     <div style={{ maxWidth, width: '100%', margin: '0 auto 24px auto' }}>
-      <div
+      <img
+        src={logoSrc}
+        alt="Logo KKN"
         style={{
           width: '100%',
-          aspectRatio: '2 / 1',
-          background: '#E0E0E0',
-          borderRadius: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '14px',
-          color: '#757575',
-          fontWeight: 500,
+          height: 'auto',
+          display: 'block',
         }}
-      >
-        Logo KKN
-      </div>
+      />
     </div>
   );
 }
