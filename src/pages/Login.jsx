@@ -25,7 +25,8 @@ function Login() {
         pendingScan.clear();
         navigate(`/scan?token=${pending}`, { replace: true });
       } else {
-        navigate(user.role === 'admin' ? '/admin' : '/scan', { replace: true });
+        const target = user.role === 'admin' || user.role === 'dpl' ? '/admin' : '/scan';
+        navigate(target, { replace: true });
       }
     }
   }, []);
@@ -45,7 +46,8 @@ function Login() {
         pendingScan.clear();
         navigate(`/scan?token=${pending}`, { replace: true });
       } else {
-        navigate(user.role === 'admin' ? '/admin' : '/scan', { replace: true });
+        const target = user.role === 'admin' || user.role === 'dpl' ? '/admin' : '/scan';
+        navigate(target, { replace: true });
       }
     } catch (err) {
       setError(err.response?.data?.message || 'NIM atau password salah');

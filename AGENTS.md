@@ -41,10 +41,23 @@ kkn-absensi-qr/
 └── .env.example
 ```
 
+## Role
+- **mahasiswa** (default): bisa scan QR absen. Set role via Supabase Table Editor jika perlu.
+- **admin**: akses penuh — lihat dashboard rekap + kelola sesi QR (generate, hapus, lihat QR, download PDF).
+- **dpl**: hanya bisa lihat dashboard rekap kehadiran. Tidak ada akses ke halaman kelola sesi QR. Set role manual via Supabase Table Editor.
+
 ## Alur Auth (JWT)
 - **Register**: password di-hash bcrypt, role otomatis `mahasiswa`. NIM dicek unik via Supabase.
 - **Login**: verifikasi password dengan bcrypt.compare, generate JWT (`jsonwebtoken.sign`) dengan payload `{ id, nim, role }`, expire 7 hari.
 - **Verify**: decode JWT (`jsonwebtoken.verify`), ambil user dari Supabase berdasarkan `decoded.id`.
+
+## Middleware Backend
+- `lib/requireRole.js`: helper untuk cek akses berbasis role di endpoint serverless.
+  - `requireRole(['admin'])(req, res)` — return user object atau kirim error 401/403.
+  - `requireRole(['admin', 'dpl'])(req, res)` — untuk endpoint yang boleh diakses admin dan dpl.
+  - Token dikirim via `Authorization: Bearer <jwt>`.
+- Endpoint session (POST/DELETE/GET /api/sessions) hanya untuk admin.
+- Endpoint GET /api/attendances (rekap) bisa diakses admin dan dpl.
 
 Environment variables yang perlu di Vercel:
 - `SUPABASE_URL` — URL project Supabase

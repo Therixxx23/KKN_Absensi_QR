@@ -1,7 +1,18 @@
 import crypto from 'crypto';
 import { supabase } from '../../lib/supabaseClient.js';
+import { requireRole } from '../../lib/requireRole.js';
 
 export default async function handler(req, res) {
+  const user =
+    req.method === 'GET'
+      ? requireRole(['admin'])(req, res)
+      : req.method === 'POST'
+        ? requireRole(['admin'])(req, res)
+        : req.method === 'DELETE'
+          ? requireRole(['admin'])(req, res)
+          : null;
+  if (!user) return;
+
   if (req.method === 'POST') return handlePost(req, res);
   if (req.method === 'GET') return handleGet(req, res);
   if (req.method === 'DELETE') return handleDelete(req, res);

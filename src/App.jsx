@@ -28,7 +28,7 @@ function App() {
       .then((res) => {
         if (res.data.success) {
           if (publicPaths.includes(window.location.pathname)) {
-            const target = user.role === 'admin' ? '/admin' : '/scan';
+            const target = user.role === 'admin' || user.role === 'dpl' ? '/admin' : '/scan';
             navigate(target, { replace: true });
           }
         } else {
@@ -61,7 +61,7 @@ function App() {
       <Route
         path="/admin"
         element={
-          <ProtectedRoute role="admin">
+          <ProtectedRoute allowedRoles={['admin', 'dpl']}>
             <DashboardAdmin />
           </ProtectedRoute>
         }
@@ -69,7 +69,7 @@ function App() {
       <Route
         path="/admin/sessions"
         element={
-          <ProtectedRoute role="admin">
+          <ProtectedRoute allowedRoles={['admin']}>
             <AdminSessions />
           </ProtectedRoute>
         }

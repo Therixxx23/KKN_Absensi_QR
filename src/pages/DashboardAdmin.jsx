@@ -102,7 +102,9 @@ function DashboardAdmin() {
       <header style={styles.header}>
         <h1 style={styles.title}>Admin QR</h1>
         <div style={styles.headerRight}>
-          <button onClick={() => navigate('/admin/sessions')} style={styles.sessionsBtn}>Kelola Sesi</button>
+          {user?.role === 'admin' && (
+            <button onClick={() => navigate('/admin/sessions')} style={styles.sessionsBtn}>Kelola Sesi</button>
+          )}
           <span style={styles.userName}>{user?.nama}</span>
           <button onClick={handleLogout} style={styles.logoutBtn}>Keluar</button>
         </div>
@@ -148,9 +150,11 @@ function DashboardAdmin() {
             <p style={{ color: 'var(--text)', marginBottom: '16px' }}>
               Buat sesi QR baru dengan rentang tanggal yang diinginkan.
             </p>
-            <Button onClick={() => navigate('/admin/sessions')}>
-              Kelola Sesi QR
-            </Button>
+            {user?.role === 'admin' && (
+              <Button onClick={() => navigate('/admin/sessions')}>
+                Kelola Sesi QR
+              </Button>
+            )}
           </div>
         )}
 

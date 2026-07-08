@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabaseClient.js';
+import { requireRole } from '../../lib/requireRole.js';
 
 function getSesiWaktu(now) {
   const jam = now.getHours();
@@ -107,6 +108,9 @@ async function handlePost(req, res) {
 }
 
 async function handleGet(req, res) {
+  const user = requireRole(['admin', 'dpl'])(req, res);
+  if (!user) return;
+
   const { tanggal } = req.query;
 
   let query = supabase
