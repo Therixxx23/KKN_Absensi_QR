@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { login } from '../services/api';
 import { pendingScan } from '../utils/pendingScan';
+import Logo from '../components/Logo';
 
 function Login() {
   const [nim, setNim] = useState('');
@@ -59,6 +60,7 @@ function Login() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
+        <Logo />
         <h1 style={styles.title}>Absensi QR KKN</h1>
         <p style={styles.subtitle}>Masuk sebagai peserta KKN</p>
         {info && <div style={styles.alertInfo}>{info}</div>}
