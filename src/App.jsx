@@ -3,9 +3,11 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { verifyToken } from './services/api';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import ScanAbsen from './pages/ScanAbsen';
 import DashboardAdmin from './pages/DashboardAdmin';
 import AdminSessions from './pages/AdminSessions';
+import ResetRequests from './pages/ResetRequests';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoadingSpinner from './components/LoadingSpinner';
 
@@ -22,7 +24,7 @@ function App() {
       return;
     }
 
-    const publicPaths = ['/', '/login', '/register'];
+    const publicPaths = ['/', '/login', '/register', '/forgot-password'];
 
     verifyToken()
       .then((res) => {
@@ -57,6 +59,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/scan" element={<ScanAbsen />} />
       <Route
         path="/admin"
@@ -71,6 +74,14 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['admin']}>
             <AdminSessions />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/reset-requests"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <ResetRequests />
           </ProtectedRoute>
         }
       />

@@ -12,22 +12,30 @@
 kkn-absensi-qr/
 ├── api/                   # Vercel Serverless Functions
 │   ├── auth/
-│   │   ├── register.js    # POST - daftar mahasiswa
-│   │   ├── login.js       # POST - login, return JWT
-│   │   └── verify.js      # GET - verifikasi JWT
+│   │   ├── register.js       # POST - daftar mahasiswa
+│   │   ├── login.js          # POST - login, return JWT
+│   │   ├── verify.js         # GET - verifikasi JWT
+│   │   ├── forgot-password.js# POST - kirim permintaan reset password
+│   │   └── reset-requests.js # GET - list pending, POST - approve + generate password baru
 │   ├── sessions/
-│   │   ├── today.js       # GET - ambil sesi QR aktif
-│   │   └── generate.js    # POST - generate sesi QR baru
-│   └── attendances/
-│       └── index.js       # POST - submit absen, GET - rekap
+│   │   ├── today.js          # GET - ambil sesi QR aktif
+│   │   └── generate.js       # POST - generate sesi QR baru
+│   ├── attendances/
+│   │   └── index.js          # POST - submit absen, GET - rekap
+│   └── users/
+│       └── count.js          # GET - jumlah mahasiswa terdaftar
 ├── lib/
-│   └── supabaseClient.js  # Koneksi Supabase dari env var
+│   ├── supabaseClient.js  # Koneksi Supabase dari env var
+│   └── requireRole.js     # Helper cek akses berbasis role
 ├── src/                   # Frontend React
 │   ├── pages/
 │   │   ├── Login.jsx
 │   │   ├── Register.jsx
+│   │   ├── ForgotPassword.jsx
 │   │   ├── ScanAbsen.jsx
-│   │   └── DashboardAdmin.jsx
+│   │   ├── DashboardAdmin.jsx
+│   │   ├── AdminSessions.jsx
+│   │   └── ResetRequests.jsx
 │   ├── components/
 │   │   └── ...
 │   └── services/api.js
@@ -38,6 +46,7 @@ kkn-absensi-qr/
 │   └── index.js
 ├── vercel.json
 ├── render.yaml            # (opsional) untuk deploy backend alternatif
+├── SQl_INSTRUCTIONS.md    # SQL untuk tabel password_reset_requests
 └── .env.example
 ```
 
@@ -58,6 +67,19 @@ kkn-absensi-qr/
   - Token dikirim via `Authorization: Bearer <jwt>`.
 - Endpoint session (POST/DELETE/GET /api/sessions) hanya untuk admin.
 - Endpoint GET /api/attendances (rekap) bisa diakses admin dan dpl.
+
+## Fitur Lupa Password
+- Mahasiswa submit NIM via POST /api/auth/forgot-password → insert ke password_reset_requests (status pending)
+- Admin lihat daftar pending via GET /api/auth/reset-requests (hanya admin)
+- Admin approve via POST /api/auth/reset-requests dengan body { id } → generate password random 8 karakter
+- Password baru di-hash bcrypt lalu disimpan; plain text dikembalikan di response (hanya sekali)
+- Tabel password_reset_requests: id, user_id, nim, status (pending/selesai), created_at
+
+## Login Page Conditional
+- GET /api/users/count menghitung jumlah user role 'mahasiswa'
+- Frontend Login.jsx fetch count saat mount:
+  - Jika count >= 17: link "Daftar" disembunyikan, hanya tampil "Lupa Password?"
+  - Jika count < 17: link "Daftar" tampil seperti biasa + link kecil "Lupa Password?" di bawahnya
 
 Environment variables yang perlu di Vercel:
 - `SUPABASE_URL` — URL project Supabase

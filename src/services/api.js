@@ -53,4 +53,20 @@ export function deleteSession(id) {
   return api.delete('/sessions', { params: { id } });
 }
 
+export function getMahasiswaCount() {
+  return api.get('/users/count');
+}
+
+export function forgotPassword(nim) {
+  return api.post('/auth/forgot-password', { nim });
+}
+
+export function getResetRequests() {
+  return api.get('/auth/reset-requests');
+}
+
+export function approveResetRequest(id) {
+  return api.post('/auth/reset-requests', { id });
+}
+
 export default api;

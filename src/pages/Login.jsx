@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { login } from '../services/api';
+import { login, getMahasiswaCount } from '../services/api';
 import { pendingScan } from '../utils/pendingScan';
 import Logo from '../components/Logo';
 
@@ -10,10 +10,15 @@ function Login() {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mahasiswaCount, setMahasiswaCount] = useState(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    getMahasiswaCount()
+      .then((res) => setMahasiswaCount(res.data.data.count))
+      .catch(() => {});
+
     if (searchParams.get('pending') || pendingScan.get()) {
       setInfo('Login dulu untuk melanjutkan absen');
     }
@@ -86,9 +91,18 @@ function Login() {
             {loading ? 'Memproses...' : 'Masuk'}
           </button>
         </form>
-        <p style={styles.footer}>
-          Belum punya akun? <Link to="/register">Daftar di sini</Link>
-        </p>
+        <div style={styles.footer}>
+          {mahasiswaCount !== null && mahasiswaCount >= 17 ? (
+            <Link to="/forgot-password">Lupa Password?</Link>
+          ) : (
+            <>
+              <p style={{ margin: 0 }}>Belum punya akun? <Link to="/register">Daftar di sini</Link></p>
+              <p style={{ margin: '8px 0 0 0', fontSize: '13px' }}>
+                <Link to="/forgot-password" style={{ color: 'var(--text)' }}>Lupa Password?</Link>
+              </p>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -172,6 +186,10 @@ const styles = {
     marginTop: '16px',
     textAlign: 'center',
     fontSize: '14px',
+    color: 'var(--text)',
+  },
+  forgotLink: {
+    fontSize: '13px',
     color: 'var(--text)',
   },
 };
