@@ -1,9 +1,19 @@
 import { supabase } from '../../lib/supabaseClient.js';
 import { requireRole } from '../../lib/requireRole.js';
 
-function getSesiWaktu(now) {
+function validateWaktuAbsen(now) {
   const jam = now.getHours();
-  return jam < 15 ? 'siang' : 'sore';
+
+  if (jam >= 6 && jam <= 12) {
+    return { valid: true, sesiWaktu: 'siang' };
+  }
+  if (jam >= 17 && jam <= 21) {
+    return { valid: true, sesiWaktu: 'sore' };
+  }
+  if (jam >= 13 && jam <= 16) {
+    return { valid: false, message: 'Belum masuk jam absen sore (mulai 17:00)' };
+  }
+  return { valid: false, message: 'Di luar jam absen yang ditentukan (06:00-12:00 siang, 17:00-21:00 sore)' };
 }
 
 export default async function handler(req, res) {
@@ -47,10 +57,19 @@ async function handlePost(req, res) {
     return res.status(400).json({ success: false, message: 'Periode absensi KKN sudah berakhir' });
   }
 
-  const sesiWaktu = bodySesiWaktu || getSesiWaktu(now);
-  if (!['siang', 'sore'].includes(sesiWaktu)) {
-    return res.status(400).json({ success: false, message: 'Sesi waktu harus "siang" atau "sore"' });
+  const validation = validateWaktuAbsen(now);
+  if (!validation.valid) {
+    return res.status(400).json({ success: false, message: validation.message });
   }
+
+  if (bodySesiWaktu && bodySesiWaktu !== validation.sesiWaktu) {
+    return res.status(400).json({
+      success: false,
+      message: `Sekarang jam absen ${validation.sesiWaktu}, bukan ${bodySesiWaktu}`,
+    });
+  }
+
+  const sesiWaktu = validation.sesiWaktu;
 
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);

@@ -138,6 +138,9 @@ function ScanAbsen() {
         {status === 'scanning' && (
           <>
             <p style={styles.instruction}>Arahkan kamera ke QR Code KKN</p>
+            <div style={styles.jamInfo}>
+              ⏰ Jam absen: siang 06:00-12:00 &bull; sore 17:00-21:00
+            </div>
             <div id="qr-reader" style={styles.reader} />
             <p style={styles.hint}>Mengarahkan ke QR...</p>
           </>
@@ -228,6 +231,15 @@ const styles = {
   instruction: {
     fontSize: '16px',
     color: 'var(--text)',
+    marginBottom: '8px',
+    textAlign: 'center',
+  },
+  jamInfo: {
+    fontSize: '13px',
+    color: 'var(--text)',
+    backgroundColor: '#F3F4F6',
+    padding: '6px 14px',
+    borderRadius: '999px',
     marginBottom: '16px',
     textAlign: 'center',
   },
