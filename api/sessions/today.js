@@ -1,12 +1,12 @@
 import { supabase } from '../../lib/supabaseClient.js';
+import { getWIBDateString } from '../../lib/dateHelper.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ success: false, message: 'Method tidak diizinkan' });
   }
 
-  const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = getWIBDateString();
 
   const { data: session, error } = await supabase
     .from('sessions')

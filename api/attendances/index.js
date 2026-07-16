@@ -1,8 +1,9 @@
 import { supabase } from '../../lib/supabaseClient.js';
 import { requireRole } from '../../lib/requireRole.js';
+import { getWIBHour, getWIBDateString, getWIBDayUTC } from '../../lib/dateHelper.js';
 
-function validateWaktuAbsen(now) {
-  const jam = now.getHours();
+function validateWaktuAbsen() {
+  const jam = getWIBHour();
 
   if (jam >= 6 && jam <= 12) {
     return { valid: true, sesiWaktu: 'siang' };
@@ -44,20 +45,17 @@ async function handlePost(req, res) {
     return res.status(400).json({ success: false, message: 'QR tidak valid, silakan scan ulang' });
   }
 
-  const now = new Date();
-  const tanggalMulai = new Date(session.tanggal_mulai);
-  const tanggalSelesai = new Date(session.tanggal_selesai);
-  tanggalSelesai.setHours(23, 59, 59, 999);
+  const todayStr = getWIBDateString();
 
-  if (now < tanggalMulai) {
+  if (todayStr < session.tanggal_mulai) {
     return res.status(400).json({ success: false, message: 'Periode absensi KKN belum dimulai' });
   }
 
-  if (now > tanggalSelesai) {
+  if (todayStr > session.tanggal_selesai) {
     return res.status(400).json({ success: false, message: 'Periode absensi KKN sudah berakhir' });
   }
 
-  const validation = validateWaktuAbsen(now);
+  const validation = validateWaktuAbsen();
   if (!validation.valid) {
     return res.status(400).json({ success: false, message: validation.message });
   }
@@ -71,18 +69,15 @@ async function handlePost(req, res) {
 
   const sesiWaktu = validation.sesiWaktu;
 
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date(now);
-  todayEnd.setHours(23, 59, 59, 999);
+  const wibDay = getWIBDayUTC();
 
   const { data: existing } = await supabase
     .from('attendances')
     .select('id')
     .eq('user_id', userId)
     .eq('sesi_waktu', sesiWaktu)
-    .gte('waktu_absen', todayStart.toISOString())
-    .lte('waktu_absen', todayEnd.toISOString())
+    .gte('waktu_absen', wibDay.start)
+    .lte('waktu_absen', wibDay.end)
     .maybeSingle();
 
   if (existing) {
@@ -98,7 +93,7 @@ async function handlePost(req, res) {
       {
         user_id: userId,
         session_id: session.id,
-        waktu_absen: now.toISOString(),
+        waktu_absen: new Date().toISOString(),
         sesi_waktu: sesiWaktu,
       },
     ])
