@@ -8,7 +8,7 @@ function validateWaktuAbsen() {
   if (jam >= 6 && jam <= 12) {
     return { valid: true, sesiWaktu: 'siang' };
   }
-  if (jam >= 17 && jam <= 21) {
+  if (jam >= 17 && jam < 21) {
     return { valid: true, sesiWaktu: 'sore' };
   }
   if (jam >= 13 && jam <= 16) {
@@ -133,9 +133,9 @@ async function handleGet(req, res) {
     .order('waktu_absen', { ascending: false });
 
   if (tanggal) {
-    const tanggalStart = `${tanggal}T00:00:00.000Z`;
-    const tanggalEnd = `${tanggal}T23:59:59.999Z`;
-    query = query.gte('waktu_absen', tanggalStart).lte('waktu_absen', tanggalEnd);
+    const startUtc = new Date(`${tanggal}T00:00:00+07:00`).toISOString();
+    const endUtc = new Date(`${tanggal}T23:59:59.999+07:00`).toISOString();
+    query = query.gte('waktu_absen', startUtc).lte('waktu_absen', endUtc);
   }
 
   const { data: attendances, error } = await query;

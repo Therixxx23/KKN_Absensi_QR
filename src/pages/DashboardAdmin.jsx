@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { getActiveSession, getAttendances } from '../services/api';
 import { downloadQRasPDF } from '../utils/qrPdf';
+import { getWIBDateString } from '../utils/wibDate';
 import Button from '../components/Button';
 import StatusBadge from '../components/StatusBadge';
 import Toast from '../components/Toast';
@@ -17,11 +18,24 @@ function DashboardAdmin() {
   const [loadingSesi, setLoadingSesi] = useState(false);
   const [loadingRekap, setLoadingRekap] = useState(false);
   const [toast, setToast] = useState(null);
-  const [filterTanggal, setFilterTanggal] = useState(new Date().toISOString().split('T')[0]);
+  const [filterTanggal, setFilterTanggal] = useState(getWIBDateString());
+  const filterRef = useRef(filterTanggal);
+  filterRef.current = filterTanggal;
 
   useEffect(() => {
     fetchActive();
     fetchRekap();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newDate = getWIBDateString();
+      if (newDate !== filterRef.current) {
+        setFilterTanggal(newDate);
+        fetchRekap(newDate);
+      }
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   async function fetchActive() {
