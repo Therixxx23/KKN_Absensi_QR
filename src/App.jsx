@@ -7,7 +7,6 @@ import ForgotPassword from './pages/ForgotPassword';
 import ScanAbsen from './pages/ScanAbsen';
 import DashboardAdmin from './pages/DashboardAdmin';
 import AdminSessions from './pages/AdminSessions';
-import ResetRequests from './pages/ResetRequests';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoadingSpinner from './components/LoadingSpinner';
 
@@ -74,14 +73,6 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['admin']}>
             <AdminSessions />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/reset-requests"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <ResetRequests />
           </ProtectedRoute>
         }
       />

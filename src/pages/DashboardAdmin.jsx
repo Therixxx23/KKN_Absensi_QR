@@ -118,7 +118,6 @@ function DashboardAdmin() {
         <div style={styles.headerRight}>
           {user?.role === 'admin' && (
             <>
-              <button onClick={() => navigate('/admin/reset-requests')} style={styles.resetBtn}>Reset PW</button>
               <button onClick={() => navigate('/admin/sessions')} style={styles.sessionsBtn}>Kelola Sesi</button>
             </>
           )}
@@ -285,15 +284,6 @@ const styles = {
   userName: {
     fontSize: '14px',
     color: 'var(--text)',
-  },
-  resetBtn: {
-    padding: '6px 14px',
-    background: '#FFF3E0',
-    color: '#E65100',
-    border: '1px solid #FFB74D',
-    borderRadius: '6px',
-    fontSize: '13px',
-    cursor: 'pointer',
   },
   sessionsBtn: {
     padding: '6px 14px',

@@ -16,7 +16,8 @@ kkn-absensi-qr/
 │   │   ├── login.js          # POST - login, return JWT
 │   │   ├── verify.js         # GET - verifikasi JWT
 │   │   ├── forgot-password.js# POST - kirim permintaan reset password
-│   │   └── reset-requests.js # GET - list pending, POST - approve + generate password baru
+│   │   ├── verify-nim.js     # POST - verifikasi NIM untuk reset password
+│   │   └── reset-password.js # POST - set password baru (self-service)
 │   ├── sessions/
 │   │   ├── today.js          # GET - ambil sesi QR aktif
 │   │   └── generate.js       # POST - generate sesi QR baru
@@ -69,11 +70,10 @@ kkn-absensi-qr/
 - Endpoint GET /api/attendances (rekap) bisa diakses admin dan dpl.
 
 ## Fitur Lupa Password
-- Mahasiswa submit NIM via POST /api/auth/forgot-password → insert ke password_reset_requests (status pending)
-- Admin lihat daftar pending via GET /api/auth/reset-requests (hanya admin)
-- Admin approve via POST /api/auth/reset-requests dengan body { id } → generate password random 8 karakter
-- Password baru di-hash bcrypt lalu disimpan; plain text dikembalikan di response (hanya sekali)
-- Tabel password_reset_requests: id, user_id, nim, status (pending/selesai), created_at
+- Step 1: POST /api/auth/verify-nim — cek NIM ada di users, return nama
+- Step 2: POST /api/auth/reset-password — validasi password min 8 char, hash bcrypt, update langsung
+- Tidak perlu approval admin; NIM unik cukup sebagai identifikasi
+- Halaman /forgot-password: 2 langkah (cari akun → set password baru)
 
 ## Login Page Conditional
 - GET /api/users/count menghitung jumlah user role 'mahasiswa'
