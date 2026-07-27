@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
-import { submitAttendance } from '../services/api';
+import { submitAttendance, verifyToken } from '../services/api';
 import { pendingScan } from '../utils/pendingScan';
 
 const QR_BOX_SIZE = 250;
@@ -45,7 +45,12 @@ function ScanAbsen() {
     }
 
     if (qrTokenFromUrl) {
-      processAttendance(qrTokenFromUrl, user.id);
+      verifyToken()
+        .then(() => processAttendance(qrTokenFromUrl, user.id))
+        .catch(() => {
+          pendingScan.set(qrTokenFromUrl);
+          navigate('/login?pending=1', { replace: true });
+        });
     } else {
       setStatus('scanning');
       setShowScanner(true);

@@ -13,6 +13,25 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      const status = error.response.status;
+      const url = error.config?.url || '';
+      const isLoginCall = url === '/auth/login';
+      const isVerifyCall = url === '/auth/verify';
+
+      if ((status === 401 || status === 403) && !isLoginCall && !isVerifyCall) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export function register(data) {
   return api.post('/auth/register', data);
 }
