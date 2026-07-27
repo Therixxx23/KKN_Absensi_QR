@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { verifyToken } from './services/api';
+import { pendingScan } from './utils/pendingScan';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import SessionExpired from './pages/SessionExpired';
 import ScanAbsen from './pages/ScanAbsen';
 import DashboardAdmin from './pages/DashboardAdmin';
 import AdminSessions from './pages/AdminSessions';
@@ -49,10 +51,18 @@ function App() {
       })
       .catch((err) => {
         console.error('[App] verifyToken FAILED:', err?.response?.status, err?.response?.data, err?.message);
+        if (window.location.pathname === '/scan') {
+          const params = new URLSearchParams(window.location.search);
+          const qrToken = params.get('token');
+          if (qrToken) {
+            pendingScan.set(qrToken);
+            console.log('[App] Saved pendingScan from URL:', qrToken);
+          }
+        }
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        console.log('[App] Cleared auth, redirecting to /login');
-        navigate('/login', { replace: true });
+        console.log('[App] Cleared auth, redirecting to /session-expired');
+        navigate('/session-expired', { replace: true });
       })
       .finally(() => {
         console.log('[App] authReady=true');
@@ -69,6 +79,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/session-expired" element={<SessionExpired />} />
       <Route path="/scan" element={<ScanAbsen />} />
       <Route
         path="/admin"

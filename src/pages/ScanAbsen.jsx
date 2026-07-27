@@ -40,15 +40,12 @@ function ScanAbsen() {
     console.log('[ScanAbsen] Mount — qrTokenFromUrl:', qrTokenFromUrl, 'token exists:', !!token, 'user:', user);
 
     if (!token || !user) {
-      console.log('[ScanAbsen] No valid session, redirecting to /login');
+      console.log('[ScanAbsen] No valid session, redirecting to /session-expired');
       if (qrTokenFromUrl) {
         pendingScan.set(qrTokenFromUrl);
-        console.log('[ScanAbsen] Saved pendingScan:', qrTokenFromUrl, '→ redirect /login?pending=1');
-        navigate('/login?pending=1', { replace: true });
-      } else {
-        console.log('[ScanAbsen] No QR token, redirect /login');
-        navigate('/login', { replace: true });
+        console.log('[ScanAbsen] Saved pendingScan:', qrTokenFromUrl, '→ redirect /session-expired');
       }
+      navigate('/session-expired', { replace: true });
       return;
     }
 
@@ -68,8 +65,8 @@ function ScanAbsen() {
         .catch((err) => {
           console.error('[ScanAbsen] verifyToken FAILED:', err?.response?.status, err?.response?.data, err?.message);
           pendingScan.set(qrTokenFromUrl);
-          console.log('[ScanAbsen] Saved pendingScan:', qrTokenFromUrl, '→ redirect /login?pending=1');
-          navigate('/login?pending=1', { replace: true });
+          console.log('[ScanAbsen] Saved pendingScan:', qrTokenFromUrl, '→ redirect /session-expired');
+          navigate('/session-expired', { replace: true });
         });
     } else {
       console.log('[ScanAbsen] No QR token in URL, showing scanner');

@@ -25,10 +25,10 @@ api.interceptors.response.use(
       console.log(`[API Interceptor] ${status} on ${url} (isLoginCall=${isLoginCall}, isVerifyCall=${isVerifyCall})`);
 
       if ((status === 401 || status === 403) && !isLoginCall && !isVerifyCall) {
-        console.log('[API Interceptor] Clearing auth + redirecting to /login');
+        console.log('[API Interceptor] Clearing auth + redirecting to /session-expired');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        window.location.href = '/session-expired';
       }
     }
     return Promise.reject(error);
