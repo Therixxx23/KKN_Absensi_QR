@@ -15,39 +15,49 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user'));
+    let token, user;
+    try {
+      token = localStorage.getItem('token');
+      const raw = localStorage.getItem('user');
+      user = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.error('[App] Failed to parse user from localStorage:', e);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
+
+    console.log('[App] Mount — pathname:', window.location.pathname, 'token exists:', !!token, 'user:', user);
 
     if (!token || !user) {
+      console.log('[App] No session, authReady=true');
       setAuthReady(true);
       return;
     }
 
     const publicPaths = ['/', '/login', '/register', '/forgot-password'];
+    const isPublic = publicPaths.includes(window.location.pathname);
 
+    console.log('[App] Calling verifyToken()...');
     verifyToken()
       .then((res) => {
-        if (res.data.success) {
-          if (publicPaths.includes(window.location.pathname)) {
-            const target = user.role === 'admin' || user.role === 'dpl' ? '/admin' : '/scan';
-            navigate(target, { replace: true });
-          }
-        } else {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          if (publicPaths.includes(window.location.pathname)) {
-            navigate('/login', { replace: true });
-          }
+        console.log('[App] verifyToken OK:', res.data);
+        if (res.data.success && isPublic) {
+          const target = user.role === 'admin' || user.role === 'dpl' ? '/admin' : '/scan';
+          console.log('[App] Authenticated on public path → redirect', target);
+          navigate(target, { replace: true });
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('[App] verifyToken FAILED:', err?.response?.status, err?.response?.data, err?.message);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        if (publicPaths.includes(window.location.pathname)) {
-          navigate('/login', { replace: true });
-        }
+        console.log('[App] Cleared auth, redirecting to /login');
+        navigate('/login', { replace: true });
       })
-      .finally(() => setAuthReady(true));
+      .finally(() => {
+        console.log('[App] authReady=true');
+        setAuthReady(true);
+      });
   }, []);
 
   if (!authReady) {

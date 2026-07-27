@@ -6,8 +6,17 @@ function getHome(role) {
 }
 
 function ProtectedRoute({ children, allowedRoles }) {
-  const user = JSON.parse(localStorage.getItem('user'));
-  const token = localStorage.getItem('token');
+  let user = null;
+  let token = null;
+  try {
+    token = localStorage.getItem('token');
+    const raw = localStorage.getItem('user');
+    user = raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    console.error('[ProtectedRoute] Failed to parse user from localStorage:', e);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }
 
   if (!token || !user) {
     return <Navigate to="/login" replace />;

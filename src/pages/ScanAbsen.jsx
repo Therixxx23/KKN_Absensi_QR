@@ -17,8 +17,17 @@ function extractToken(input) {
 
 function ScanAbsen() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
-  const token = localStorage.getItem('token');
+  let user = null;
+  let token = null;
+  try {
+    const raw = localStorage.getItem('user');
+    user = raw ? JSON.parse(raw) : null;
+    token = localStorage.getItem('token');
+  } catch (e) {
+    console.error('[ScanAbsen] Failed to parse user from localStorage:', e);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }
   const scannerRef = useRef(null);
   const [status, setStatus] = useState('loading');
   const [result, setResult] = useState(null);
@@ -28,30 +37,42 @@ function ScanAbsen() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const qrTokenFromUrl = params.get('token');
+    console.log('[ScanAbsen] Mount — qrTokenFromUrl:', qrTokenFromUrl, 'token exists:', !!token, 'user:', user);
 
     if (!token || !user) {
+      console.log('[ScanAbsen] No valid session, redirecting to /login');
       if (qrTokenFromUrl) {
         pendingScan.set(qrTokenFromUrl);
+        console.log('[ScanAbsen] Saved pendingScan:', qrTokenFromUrl, '→ redirect /login?pending=1');
         navigate('/login?pending=1', { replace: true });
       } else {
+        console.log('[ScanAbsen] No QR token, redirect /login');
         navigate('/login', { replace: true });
       }
       return;
     }
 
     if (user.role !== 'mahasiswa') {
+      console.log('[ScanAbsen] Role is', user.role, '→ redirect /admin');
       navigate('/admin', { replace: true });
       return;
     }
 
     if (qrTokenFromUrl) {
+      console.log('[ScanAbsen] Has QR token, calling verifyToken first...');
       verifyToken()
-        .then(() => processAttendance(qrTokenFromUrl, user.id))
-        .catch(() => {
+        .then((res) => {
+          console.log('[ScanAbsen] verifyToken OK, calling processAttendance');
+          processAttendance(qrTokenFromUrl, user.id);
+        })
+        .catch((err) => {
+          console.error('[ScanAbsen] verifyToken FAILED:', err?.response?.status, err?.response?.data, err?.message);
           pendingScan.set(qrTokenFromUrl);
+          console.log('[ScanAbsen] Saved pendingScan:', qrTokenFromUrl, '→ redirect /login?pending=1');
           navigate('/login?pending=1', { replace: true });
         });
     } else {
+      console.log('[ScanAbsen] No QR token in URL, showing scanner');
       setStatus('scanning');
       setShowScanner(true);
     }
@@ -69,12 +90,17 @@ function ScanAbsen() {
       },
       async (decodedText) => {
         await scanner.stop();
+        console.log('[ScanAbsen] QR scanned:', decodedText);
         setStatus('loading');
         try {
-          const res = await submitAttendance(extractToken(decodedText), user.id);
+          const extracted = extractToken(decodedText);
+          console.log('[ScanAbsen] Extracted token:', extracted);
+          const res = await submitAttendance(extracted, user.id);
+          console.log('[ScanAbsen] submitAttendance OK:', res.data);
           setResult(res.data.data);
           setStatus('success');
         } catch (err) {
+          console.error('[ScanAbsen] Scanner submit FAILED:', err?.response?.status, err?.response?.data, err?.message);
           setErrorMsg(err.response?.data?.message || 'Gagal absen, coba lagi');
           setStatus('error');
         }
@@ -98,12 +124,15 @@ function ScanAbsen() {
   }, [showScanner, startScanner]);
 
   async function processAttendance(qrToken, userId) {
+    console.log('[ScanAbsen] processAttendance — qrToken:', qrToken, 'userId:', userId);
     setStatus('loading');
     try {
       const res = await submitAttendance(qrToken, userId);
+      console.log('[ScanAbsen] submitAttendance OK:', res.data);
       setResult(res.data.data);
       setStatus('success');
     } catch (err) {
+      console.error('[ScanAbsen] submitAttendance FAILED:', err?.response?.status, err?.response?.data, err?.message);
       setErrorMsg(err.response?.data?.message || 'Gagal absen, coba lagi');
       setStatus('error');
     }

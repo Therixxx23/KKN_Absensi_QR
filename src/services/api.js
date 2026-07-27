@@ -22,7 +22,10 @@ api.interceptors.response.use(
       const isLoginCall = url === '/auth/login';
       const isVerifyCall = url === '/auth/verify';
 
+      console.log(`[API Interceptor] ${status} on ${url} (isLoginCall=${isLoginCall}, isVerifyCall=${isVerifyCall})`);
+
       if ((status === 401 || status === 403) && !isLoginCall && !isVerifyCall) {
+        console.log('[API Interceptor] Clearing auth + redirecting to /login');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
